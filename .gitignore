@@ -1,5 +1,5 @@
-data
-dataset_full
+data/
+dataset_full/
 api_key.py
-clip_scores
-figures
+clip_scores/
+figures/

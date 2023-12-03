@@ -1,4 +1,5 @@
 import torch
+from torch.nn.functional import normalize
 import clip
 from PIL import Image
 import numpy as np
@@ -14,32 +15,26 @@ import gc
 def get_image(filepath):
     return np.asarray(Image.open(filepath))
 
-def compute_clip(image, text):
+def compute_clip(image, text, metric):
     if not text:
         return 0
-    return metric(torch.from_numpy(image), text).detach().item()
+    image_tensor = torch.from_numpy(image)
+    res =  metric(image_tensor, text).detach().item()
+    del image_tensor
+    return res
 
-def compute_image_clip(image1, image2):
-    image_1 = preprocess(Image.open(image1)).unsqueeze(0).to(device)
-    image_2 = preprocess(Image.open(image2)).unsqueeze(0).to(device)
+def get_features(image, model, preprocess):
+    image = preprocess(Image.open(image)).unsqueeze(0).to(device)
+    image_features = model.encode_image(image)
+    image_features = normalize(image_features, p=2.0, dim=-1)
+    return image_features.cpu().detach().numpy()
 
-    image_1_features = model.encode_image(image_1)
-    image_1_features /= image_1_features.norm(dim=-1, keepdim=True)
+def compute_image_clip(image1, image2, model, preprocess, device):
+    image_1_features = get_features(image1, model, preprocess)
+    image_2_features = get_features(image2, model, preprocess)
 
-    image_2_features = model.encode_image(image_2)
-    image_2_features /= image_2_features.norm(dim=-1, keepdim=True)
-
-    similarity = image_2_features.cpu().detach().numpy() @ image_1_features.cpu().detach().numpy().T
+    similarity = image_2_features @ image_1_features.T
     res = similarity.item() * 100
-    del similarity
-    del image_1_features
-    del image_2_features
-    del image_1
-    del image_2
-    gc.collect()
-    torch.cuda.synchronize()
-    torch.cuda.empty_cache()
-    # print(torch.cuda.memory_allocated())
     return res
     
 
@@ -51,9 +46,9 @@ def compute_clip_from_fp(image_fp, text_fp):
     text = load_prompt(image_name, text_fp)
     if type(text) != str:
         return 0
-    return compute_clip(image, text)
+    return compute_clip(image, text, metric)
 
-def compute_clip_from_sample(sample_fp, text_fp):
+def compute_clip_from_sample(sample_fp, text_fp, model=None, preprocess=None):
     original_clip = compute_clip_from_fp(f"{sample_fp}/original.png", text_fp)
     synthetic_clip = 0
     for i in range(4):
@@ -63,7 +58,7 @@ def compute_clip_from_sample(sample_fp, text_fp):
     synthetic_clip /= 4
     return [original_clip, synthetic_clip]
 
-def pairwise_clip(sample_fp, text_fp):
+def pairwise_clip(sample_fp, text_fp, model, preprocess):
 
     clip_vals = 0
     clip_samples = 0
@@ -72,14 +67,15 @@ def pairwise_clip(sample_fp, text_fp):
             clip_samples += 1
             clip_vals += compute_image_clip(
                 f"{sample_fp}/images/image_{i}.png",
-                f"{sample_fp}/images/image_{j}.png"
+                f"{sample_fp}/images/image_{j}.png",
+                model, preprocess, device
             )
 
     clip_vals /= clip_samples
     return [clip_vals]
 
 
-def compute_clip_from_dataset(dataset_fp, ref_file=""):
+def compute_clip_from_dataset(dataset_fp, model, preprocess, ref_file=""):
     original_clips = []
     sample_clips = []
     clip_log = dict()
@@ -94,12 +90,13 @@ def compute_clip_from_dataset(dataset_fp, ref_file=""):
             print ("Hi")
             continue
 
-        clips =\
-        pairwise_clip(f"{dataset_fp}/{fp}", "data/sketch_drawing.csv")
+        clips = pairwise_clip(f"{dataset_fp}/{fp}", "data/sketch_drawing.csv", model, preprocess)
+        # clips = [1]
+        # synthetic_clips = compute_clip_from_sample(f"{dataset_fp}/{fp}", "data/sketch_drawing.csv")
         if clips[0]:
             print (f"{fp}: {clips}")
             clip_log[fp] = clips
-            torch.cuda.synchronize() 
+            print(torch.cuda.memory_allocated())
             
 
     return clip_log
@@ -118,12 +115,12 @@ def check_dirs_have_image(input_dir):
 if __name__ == "__main__":
     metric = CLIPScore(model_name_or_path="openai/clip-vit-base-patch16")
     input_dir = "dataset_full"
-    device = "cpu"
+    device = "cuda"
     save_dir = "clip_scores/pairwise_clip_tmp.csv"
 
     model, preprocess = clip.load("ViT-B/32", device=device)
     check_dirs_have_image(input_dir)
-    clip_log = compute_clip_from_dataset(input_dir)
+    clip_log = compute_clip_from_dataset(input_dir, model, preprocess)
     df = pd.DataFrame.from_dict(clip_log, orient="index")
     
     df.to_csv(save_dir)

@@ -1,6 +1,5 @@
 import requests
 from openai import OpenAI
-import base64
 import json
 import os
 from requests.models import Response
@@ -147,12 +146,14 @@ def check_valid_directory(dirpath):
     """
     Checks if dirpath must only contain png files
     """
+    all_png = True
     for dirpath, _, filenames in os.walk(dirpath):
         for f in filenames:
             if not f.endswith(".png"):
-                return False
+                print (f)
+                all_png = False
 
-    return True
+    return all_png
     pass
 
 
@@ -162,7 +163,9 @@ def sketches_to_dataset(input_dir, output_dir):
         raise Exception("Directory contains non-png files")
     if not os.path.isdir(output_dir):
         os.mkdir(output_dir)
+
     for dirpath, _, filenames in os.walk(input_dir):
+        print ("filenames", filenames)
         for f in filenames:
             dataset_dir = f"{output_dir}/{os.path.splitext(f)[0]}"
             print ("Processing", f)
@@ -174,9 +177,8 @@ def sketches_to_dataset(input_dir, output_dir):
             while res is None:
                 try:
                     res = sketch_to_images(os.path.abspath(os.path.join(dirpath, f)), dataset_dir)
-                    print ("Generated image, now sleeping")
-                    time.sleep(10)
-                    print ("Finished sleeping")
+                    print ("Generated image")
+                    time.sleep(5)
                 except Exception as error:
                     print("An error occured: ", error)
                 
@@ -187,4 +189,4 @@ def sketches_to_dataset(input_dir, output_dir):
 
 
 if __name__ == "__main__":
-    sketches_to_dataset("data/original_data", "dataset_full")
+    sketches_to_dataset("milk_frother_dataset", "dataset_full")

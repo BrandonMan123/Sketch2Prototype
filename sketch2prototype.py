@@ -178,7 +178,7 @@ def sketches_to_dataset(input_dir, output_dir):
                 try:
                     res = sketch_to_images(os.path.abspath(os.path.join(dirpath, f)), dataset_dir)
                     print ("Generated image")
-                    time.sleep(5)
+                    time.sleep(5) # sleep avoids triggering the rate limiter from openai
                 except Exception as error:
                     print("An error occured: ", error)
                 

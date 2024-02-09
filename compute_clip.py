@@ -85,16 +85,21 @@ def compute_clip_from_dataset(dataset_fp, model, preprocess, ref_file=""):
         ref_df = set(pd.read_csv(ref_file)['Unnamed: 0'])
 
     for fp in os.listdir(dataset_fp):
+        if 'csv' in fp:
+            continue
 
         if fp in ref_df:
             continue
 
-        clips = pairwise_clip(f"{dataset_fp}/{fp}", "data/sketch_drawing.csv", model, preprocess)
+        clips = pairwise_clip(f"{dataset_fp}/{fp}", f"{dataset_fp}/sketch_drawing.csv", model, preprocess)
         # clips = [1]
-        # synthetic_clips = compute_clip_from_sample(f"{dataset_fp}/{fp}", "data/sketch_drawing.csv")
+        synthetic_clips = compute_clip_from_sample(f"{dataset_fp}/{fp}", f"{dataset_fp}/sketch_drawing.csv")
+        if synthetic_clips[0] == 0:
+            continue
         if clips[0]:
-            print (f"{fp}: {clips}")
-            clip_log[fp] = clips
+            print (f"{fp}: Pairwise clip: {clips[0]} Original clip: {synthetic_clips[0]} Synthetic clip: {synthetic_clips[1]}")
+            res = [clips[0], synthetic_clips[0], synthetic_clips[1]]
+            clip_log[fp] = res
             
 
     return clip_log
@@ -102,6 +107,8 @@ def compute_clip_from_dataset(dataset_fp, model, preprocess, ref_file=""):
 def check_dirs_have_image(input_dir):
     no_img = False
     for val in os.listdir(input_dir):
+        if "csv" in val:
+            continue
         if "dalle_response.json" not in os.listdir(f"{input_dir}/{val}"):
             print (val)
             no_img = True
@@ -113,7 +120,7 @@ def check_dirs_have_image(input_dir):
 if __name__ == "__main__":
     metric = CLIPScore(model_name_or_path="openai/clip-vit-base-patch16")
     input_dir = "dataset_full"
-    device = "cuda"
+    device = "cuda" if torch.cuda.is_available() else "cpu"
     save_dir = "clip_scores"
     if not os.path.isdir(save_dir):
         os.mkdir(save_dir)
@@ -122,6 +129,7 @@ if __name__ == "__main__":
     check_dirs_have_image(input_dir)
     clip_log = compute_clip_from_dataset(input_dir, model, preprocess)
     df = pd.DataFrame.from_dict(clip_log, orient="index")
+    df.columns = ["Pairwise clip", "Original clip", "Synthetic clip"]
     
-    df.to_csv(f"{save_dir}/pairwise_clip.csv")
+    df.to_csv(f"{save_dir}/results.csv")
     print ("Done")

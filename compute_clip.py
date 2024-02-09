@@ -114,12 +114,14 @@ if __name__ == "__main__":
     metric = CLIPScore(model_name_or_path="openai/clip-vit-base-patch16")
     input_dir = "dataset_full"
     device = "cuda"
-    save_dir = "clip_scores/pairwise_clip.csv"
+    save_dir = "clip_scores"
+    if not os.path.isdir(save_dir):
+        os.mkdir(save_dir)
 
     model, preprocess = clip.load("ViT-B/32", device=device)
     check_dirs_have_image(input_dir)
     clip_log = compute_clip_from_dataset(input_dir, model, preprocess)
     df = pd.DataFrame.from_dict(clip_log, orient="index")
     
-    df.to_csv(save_dir)
+    df.to_csv(f"{save_dir}/pairwise_clip.csv")
     print ("Done")

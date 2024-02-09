@@ -8,7 +8,7 @@ Sketch2Prototype is a framework that converts abstract sketches into 3D-printabl
 
 1. Download our milk frother dataset here : https://www.dropbox.com/scl/fo/2vpqrqkdu6o7uo95it18h/h?rlkey=95c256efvaphhgy5xg4cw4fwo&dl=0
 2. Run `pip install -r requirements.txt`
-3. Create an OpenAI api key. Create a file named `api_key.py` and write `api_key = <YOUR API KEY>`
+3. Create an OpenAI api key. Inside `api_key.py` put your API key into `api_key`
 4. Run `python3 sketch2prototype.py --input_dir data --output_dir augmented_dataset`
 5. Run `python3 compute_clip.py` for metrics
 

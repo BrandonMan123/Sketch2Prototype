@@ -87,7 +87,6 @@ def compute_clip_from_dataset(dataset_fp, model, preprocess, ref_file=""):
     for fp in os.listdir(dataset_fp):
 
         if fp in ref_df:
-            print ("Hi")
             continue
 
         clips = pairwise_clip(f"{dataset_fp}/{fp}", "data/sketch_drawing.csv", model, preprocess)
@@ -96,7 +95,6 @@ def compute_clip_from_dataset(dataset_fp, model, preprocess, ref_file=""):
         if clips[0]:
             print (f"{fp}: {clips}")
             clip_log[fp] = clips
-            print(torch.cuda.memory_allocated())
             
 
     return clip_log
@@ -116,7 +114,7 @@ if __name__ == "__main__":
     metric = CLIPScore(model_name_or_path="openai/clip-vit-base-patch16")
     input_dir = "dataset_full"
     device = "cuda"
-    save_dir = "clip_scores/pairwise_clip_tmp.csv"
+    save_dir = "clip_scores/pairwise_clip.csv"
 
     model, preprocess = clip.load("ViT-B/32", device=device)
     check_dirs_have_image(input_dir)

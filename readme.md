@@ -10,6 +10,9 @@ Sketch2Prototype is a framework that converts abstract sketches into 3D-printabl
 2. Run `pip install -r requirements.txt`
 3. Create an OpenAI api key. Inside `api_key.py` put your API key into `api_key`
 4. Run `python3 sketch2prototype.py --input_dir data --output_dir augmented_dataset`
-5. Run `python3 compute_clip.py` for metrics
+
+## Running Metrics
+1. Move sketch_drawings.csv into you generated dataset
+2. Run python3 compute_clip.py
 
 For our generated dataset, you can have a look here: https://www.dropbox.com/home/decode_lab/Datasets/sketch2prototype. Note that you can generate at most 100 images per day as of writing since OpenAI only allows 100 requests to GPT4-V.

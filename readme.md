@@ -13,6 +13,6 @@ Sketch2Prototype is a framework that converts abstract sketches into 3D-printabl
 
 ## Running Metrics
 1. Move sketch_drawings.csv into you generated dataset
-2. Run python3 compute_clip.py
+2. Run `python3 compute_clip.py`. The `clip_scores` directory will be generated and results will be stored there.
 
 For our generated dataset, you can have a look here: https://www.dropbox.com/home/decode_lab/Datasets/sketch2prototype. Note that you can generate at most 100 images per day as of writing since OpenAI only allows 100 requests to GPT4-V.

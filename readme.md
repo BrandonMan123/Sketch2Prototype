@@ -17,14 +17,17 @@ Sketch2Prototype is a framework that converts abstract sketches into 3D-printabl
 
 For our generated dataset, you can have a look here: https://www.dropbox.com/home/decode_lab/Datasets/sketch2prototype. Note that you can generate at most 100 images per day as of writing since OpenAI only allows 100 requests to GPT4-V.
 
-## About the dataset
-# Base milk frother dataset
+# About the dataset
+## Base milk frother dataset
 The unprocessed milk frother dataset consists of 1089 images denoted as Page-X.png where X is the sample ID. The dataset also consists of a csv file named sketch_drawing.csv that includes Image_ID, that denotes the id of the image, and text, that denotes the text description of the image. The other fields in the dataset do not matter for the purposes of this project.
 
-# Augmented milk frother dataset
+## Augmented milk frother dataset
 After running the sketch2prototype framework on the dataset, we obtain an augmented dataset. Each sample has its own directory with the following contents:
 1. Directory of 4 generated images
 2. dalle_response.json - a log of the prompts used to generate the images
 3. original.png - the original milk frother sketch used to generate the 4 images
 
 Additionally, sketch_drawing.csv is in the folder.
+
+# Acknowledgements
+We would like to thank Scarlett Miller's group at Penn State for providing access to the milk frother dataset. https://sites.psu.edu/creativitymetrics/2018/08/24/summary-of-idea-repository/
